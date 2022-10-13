@@ -136,3 +136,8 @@ data/*
 
 # Virtual Environment
 venv/
+
+#Icon
+Icon
+src/Icon
+data/Icon
