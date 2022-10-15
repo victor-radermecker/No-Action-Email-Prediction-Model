@@ -1,4 +1,4 @@
-panda
+pandas
 numpy
 scipy
 sklearn
