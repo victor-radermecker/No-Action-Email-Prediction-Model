@@ -2,7 +2,9 @@ import pandas as pd
 from nlp_utils import *
 from cleaning_pipeline import *
 import time
-
+from packages import *
+from bert import BertClassifier
+from tfidf import TfidfClassifer
 
 class EmailClassifier:
     def __init__(self, in_path, out_path):
@@ -14,7 +16,11 @@ class EmailClassifier:
         self.read_data()
         self.clean_data()
 
+        # get local path
+        self.local_path = os.path.dirname(os.path.abspath(__file__))
+
         # Model
+        self.initalize_model()
 
     def init(self):
         pass
@@ -57,3 +63,11 @@ class EmailClassifier:
         self.results_path = (
             self.out_path + "self.timestamp" + "_CMACGM_Results" + ".csv"
         )
+
+    def initalize_model(self):
+        # BertClassifier(self.data, self.local_path, cuda=False)
+        EmailObjectClassifier = TfidfClassifer(self.data, self.local_path, "EmailObject", train=False)
+        EmailObjectClassifier.predict()
+        print(EmailObjectClassifier.predictions)
+
+
