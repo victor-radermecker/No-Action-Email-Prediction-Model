@@ -29,10 +29,10 @@ def data_cleaning(df, path, stopwords=True, lemmatize=True, english_words=True):
     df: raw dataframe from CMA CGM.
     """
 
-    # print("Cleaning starting...")
+    print("Cleaning starting...")
 
-    # # Drop columns with no email content
-    # df = df.dropna(subset=["LastIncomingEmail__c"])
+    # Drop columns with no email content
+    df = df.dropna(subset=["LastIncomingEmail__c"])
 
     # # Drop this column as it contains always the same string "Case" or "Contact"
     # df = df.drop(["attributes.type", "Contact.attributes.type"], axis=1)
@@ -53,87 +53,83 @@ def data_cleaning(df, path, stopwords=True, lemmatize=True, english_words=True):
     # df["LastEmailCCAddressCount"] = df["LastEmailCCAddressCount"].fillna(0)
     # df["LastEmailCCAddressCount"] = df["LastEmailCCAddressCount"].astype(int)
 
-    # # check when SuppliedEmail has the same values as ContactEmail
-    # test = df.apply(
-    #     lambda row: 1 if row["SuppliedEmail"] == row["Contact.Email"] else 0, axis=1
-    # )
+    # check when SuppliedEmail has the same values as ContactEmail
+    test = df.apply(
+        lambda row: 1 if row["SuppliedEmail"] == row["Contact.Email"] else 0, axis=1
+    )
 
-    # # Remove the CaseNumber from the EmailTemplateSubjectDispute__c
-    # df["EmailTemplateSubjectDispute__c"] = df.apply(
-    #     lambda row: row["EmailTemplateSubjectDispute__c"].replace(
-    #         "Case #" + str(row["CaseNumber"]), ""
-    #     ),
-    #     axis=1,
-    # )
+    # Remove the CaseNumber from the EmailTemplateSubjectDispute__c
+    df["EmailTemplateSubjectDispute__c"] = df.apply(
+        lambda row: row["EmailTemplateSubjectDispute__c"].replace(
+            "Case #" + str(row["CaseNumber"]), ""
+        ),
+        axis=1,
+    )
 
-    # # convert Contact.attributes.url to string
-    # df["Contact.attributes.url"] = df["Contact.attributes.url"].astype(str)
+    # convert Contact.attributes.url to string
+    df["Contact.attributes.url"] = df["Contact.attributes.url"].astype(str)
 
-    # # remove /services/data/v42.0/sobjects/Contact/ from the strings in Contact.attributes.url
-    # df["Contact.attributes.url"] = df["Contact.attributes.url"].apply(
-    #     lambda x: x.replace("/services/data/v42.0/sobjects/Contact/", "")
-    # )
+    # remove /services/data/v42.0/sobjects/Contact/ from the strings in Contact.attributes.url
+    df["Contact.attributes.url"] = df["Contact.attributes.url"].apply(
+        lambda x: x.replace("/services/data/v42.0/sobjects/Contact/", "")
+    )
 
-    # # convert Contact.attributes.url to string
-    # df["attributes.url"] = df["attributes.url"].astype(str)
+    # convert Contact.attributes.url to string
+    df["attributes.url"] = df["attributes.url"].astype(str)
 
-    # # remove /services/data/v42.0/sobjects/Contact/ from the strings in Contact.attributes.url
-    # df["attributes.url"] = df["attributes.url"].apply(
-    #     lambda x: x.replace("/services/data/v42.0/sobjects/Case/", "")
-    # )
+    # remove /services/data/v42.0/sobjects/Contact/ from the strings in Contact.attributes.url
+    df["attributes.url"] = df["attributes.url"].apply(
+        lambda x: x.replace("/services/data/v42.0/sobjects/Case/", "")
+    )
 
-    # # For the vast majority of the rows (85%), the columns SuppliedEmail and Contact.Email have the same value.
-    # # When the values are different, one of them has NaN and the other has the email address.
-    # # Therefore, we can fill the NaN of Contact.Email with the value of SuppliedEmail
-    # df["Contact.Email"] = df["Contact.Email"].fillna(df["SuppliedEmail"])
+    # For the vast majority of the rows (85%), the columns SuppliedEmail and Contact.Email have the same value.
+    # When the values are different, one of them has NaN and the other has the email address.
+    # Therefore, we can fill the NaN of Contact.Email with the value of SuppliedEmail
+    df["Contact.Email"] = df["Contact.Email"].fillna(df["SuppliedEmail"])
 
-    # # Then we can drop the column SuppliedEmail
-    # df = df.drop(["SuppliedEmail"], axis=1)
+    # Then we can drop the column SuppliedEmail
+    df = df.drop(["SuppliedEmail"], axis=1)
 
-    # # fill NaN of LastEmailCCAddress__c by empty string
-    # df["LastEmailCCAddress__c"] = df["LastEmailCCAddress__c"].fillna("")
+    # fill NaN of LastEmailCCAddress__c by empty string
+    df["LastEmailCCAddress__c"] = df["LastEmailCCAddress__c"].fillna("")
 
-    # # Rename Topics__c in Topics
-    # df = df.rename(columns={"Topics__c": "Topics"})
+    # Rename Topics__c in Topics
+    df = df.rename(columns={"Topics__c": "Topics"})
 
-    # # Rename LastIncomingEmail__c in LastIncomingEmail
-    # df = df.rename(columns={"LastIncomingEmail__c": "LastIncomingEmail"})
+    # Rename LastIncomingEmail__c in LastIncomingEmail
+    df = df.rename(columns={"LastIncomingEmail__c": "LastIncomingEmail"})
 
-    # # Rename TeamName__c in TeamName
-    # df = df.rename(columns={"TeamName__c": "TeamName"})
+    # Rename TeamName__c in TeamName
+    df = df.rename(columns={"TeamName__c": "TeamName"})
 
-    # # Rename RequesterEmail__c in RequesterEmail
-    # df = df.rename(columns={"RequesterEmail__c": "RequesterEmail"})
+    # Rename RequesterEmail__c in RequesterEmail
+    df = df.rename(columns={"RequesterEmail__c": "RequesterEmail"})
 
-    # # Rename EmailTemplateSubjectDispute__c by EmailObject
-    # df = df.rename(columns={"EmailTemplateSubjectDispute__c": "EmailObject"})
+    # Rename EmailTemplateSubjectDispute__c by EmailObject
+    df = df.rename(columns={"EmailTemplateSubjectDispute__c": "EmailObject"})
 
-    # # Rename LastEmailCCAddress__c by LastEmailCCAddress
-    # df = df.rename(columns={"LastEmailCCAddress__c": "LastEmailCCAddress"})
+    # Rename LastEmailCCAddress__c by LastEmailCCAddress
+    df = df.rename(columns={"LastEmailCCAddress__c": "LastEmailCCAddress"})
 
-    # # Rename attributes.url by AttributesURL
-    # df = df.rename(columns={"attributes.url": "AttributesURL"})
+    # Rename attributes.url by AttributesURL
+    df = df.rename(columns={"attributes.url": "AttributesURL"})
 
-    # # Rename Contact.attributes.url by ContactAttributesURL
-    # df = df.rename(columns={"Contact.attributes.url": "ContactAttributesURL"})
+    # Rename Contact.attributes.url by ContactAttributesURL
+    df = df.rename(columns={"Contact.attributes.url": "ContactAttributesURL"})
 
-    # # Rename Contact.Email by ContactEmail
-    # df = df.rename(columns={"Contact.Email": "ContactEmail"})
+    # Rename Contact.Email by ContactEmail
+    df = df.rename(columns={"Contact.Email": "ContactEmail"})
 
-    # # Cleaning of the LastIncomingEmail column using BeautifulSoup
-    # for index, row in tqdm(df.iterrows(), total=df.shape[0]):
-    #     df.at[index, "LastIncomingEmailContent"] = BeautifulSoup(
-    #         row["LastIncomingEmail"], "html"
-    #     ).text
+    # Cleaning of the LastIncomingEmail column using BeautifulSoup
+    for index, row in tqdm(df.iterrows(), total=df.shape[0]):
+        df.at[index, "LastIncomingEmailContent"] = BeautifulSoup(
+            row["LastIncomingEmail"], "html"
+        ).text
 
-    # # drop the column LastIncomingEmail
-    # df = df.drop(["LastIncomingEmail"], axis=1)
+    # drop the column LastIncomingEmail
+    df = df.drop(["LastIncomingEmail"], axis=1)
 
     # reset index
-
-    df = pd.read_csv(
-        "/Users/victor/Documents/Confidential Dataset/ML_NOAC_NOVA_Extraction_Cleaned.csv"
-    )
     df.reset_index(inplace=True)
 
     # From LastEmailCCAddress get whether cma-cgm is cc'd or not
@@ -149,17 +145,16 @@ def data_cleaning(df, path, stopwords=True, lemmatize=True, english_words=True):
     df = df.replace(r"  ", " ", regex=True)
     df = df.replace(r"\t\t", " ", regex=True)
 
-    df["LastEmailContent"] = df["LastIncomingEmailContent"].progress_apply(
-        split_emails, args=(stopwords, lemmatize, english_words)
-    )
+    df["LastEmailContent"] = df["LastIncomingEmailContent"].progress_apply(split_emails)
 
     # save the cleaned data
     path_victor = "/Users/victor/Documents/Confidential Dataset/ML_NOAC_NOVA_Extraction_Cleaned_FinalCleaned.csv"
     path_andrea = "/home/azanon/ML_NOAC_NOVA_Extraction_Cleaned_LastNew.csv"
     df.to_csv(
-        path,
+        path_andrea,
         index=False,
     )
+
     print("Cleaning completed. :) ")
 
     return df
