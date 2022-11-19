@@ -34,24 +34,24 @@ def data_cleaning(df, path, stopwords=True, lemmatize=True, english_words=True):
     # Drop columns with no email content
     df = df.dropna(subset=["LastIncomingEmail__c"])
 
-    # # Drop this column as it contains always the same string "Case" or "Contact"
-    # df = df.drop(["attributes.type", "Contact.attributes.type"], axis=1)
+    # Drop this column as it contains always the same string "Case" or "Contact"
+    df = df.drop(["attributes.type", "Contact.attributes.type"], axis=1)
 
-    # # drop the columns with only null values
-    # df = df.drop(["Contact"], axis=1)
+    # drop the columns with only null values
+    df = df.drop(["Contact"], axis=1)
 
-    # # create a new column for the email content initalized to empty string
-    # df["LastIncomingEmailContent"] = ""
+    # create a new column for the email content initalized to empty string
+    df["LastIncomingEmailContent"] = ""
 
-    # # convert to TYPE column to 1 if NOAC and to 0 otherwise
-    # df["Type"] = df["Type"].apply(lambda x: 1 if x == "NOAC" else 0)
+    # convert to TYPE column to 1 if NOAC and to 0 otherwise
+    df["Type"] = df["Type"].apply(lambda x: 1 if x == "NOAC" else 0)
 
-    # # assign the number of times ; appears in each string of LastEmailCCAddress__c in the new column cc_count
-    # df["LastEmailCCAddressCount"] = df["LastEmailCCAddress__c"].str.count(";") + 1
+    # assign the number of times ; appears in each string of LastEmailCCAddress__c in the new column cc_count
+    df["LastEmailCCAddressCount"] = df["LastEmailCCAddress__c"].str.count(";") + 1
 
-    # # fill NaN of LastEmailCCAddress__count by 0
-    # df["LastEmailCCAddressCount"] = df["LastEmailCCAddressCount"].fillna(0)
-    # df["LastEmailCCAddressCount"] = df["LastEmailCCAddressCount"].astype(int)
+    # fill NaN of LastEmailCCAddress__count by 0
+    df["LastEmailCCAddressCount"] = df["LastEmailCCAddressCount"].fillna(0)
+    df["LastEmailCCAddressCount"] = df["LastEmailCCAddressCount"].astype(int)
 
     # check when SuppliedEmail has the same values as ContactEmail
     test = df.apply(
@@ -148,10 +148,8 @@ def data_cleaning(df, path, stopwords=True, lemmatize=True, english_words=True):
     df["LastEmailContent"] = df["LastIncomingEmailContent"].progress_apply(split_emails)
 
     # save the cleaned data
-    path_victor = "/Users/victor/Documents/Confidential Dataset/ML_NOAC_NOVA_Extraction_Cleaned_FinalCleaned.csv"
-    path_andrea = "/home/azanon/ML_NOAC_NOVA_Extraction_Cleaned_LastNew.csv"
     df.to_csv(
-        path_andrea,
+        path,
         index=False,
     )
 
