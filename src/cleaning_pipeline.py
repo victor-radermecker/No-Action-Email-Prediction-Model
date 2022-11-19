@@ -1,10 +1,14 @@
+# disable warnings
+import warnings
+
+warnings.filterwarnings("ignore")
+
 import pandas as pd
 from bs4 import BeautifulSoup
 from tqdm import tqdm
 import matplotlib.pyplot as plt
 import re
 
-from nltk.stem import PorterStemmer
 from nltk.stem import WordNetLemmatizer
 import nltk
 from nltk.corpus import stopwords
@@ -18,13 +22,12 @@ from string import digits
 # nltk.download('wordnet')
 # nltk.download('words')
 
-# detect language from text
-import langid
-
 tqdm.pandas()
 
 
-def data_cleaning(df, path, stopwords=True, lemmatize=True, english_words=True):
+def data_cleaning(
+    df, path, stopwords_bool=True, lemmatize_bool=True, english_words_bool=True
+):
     """
     df: raw dataframe from CMA CGM.
     """
@@ -145,7 +148,9 @@ def data_cleaning(df, path, stopwords=True, lemmatize=True, english_words=True):
     df = df.replace(r"  ", " ", regex=True)
     df = df.replace(r"\t\t", " ", regex=True)
 
-    df["LastEmailContent"] = df["LastIncomingEmailContent"].progress_apply(split_emails)
+    df["LastEmailContent"] = df["LastIncomingEmailContent"].progress_apply(
+        split_emails, args=(stopwords_bool, lemmatize_bool, english_words_bool)
+    )
 
     # save the cleaned data
     df.to_csv(
@@ -153,7 +158,7 @@ def data_cleaning(df, path, stopwords=True, lemmatize=True, english_words=True):
         index=False,
     )
 
-    print("Cleaning completed. :) ")
+    print("Cleaning completed.")
 
     return df
 
@@ -176,7 +181,7 @@ def parenthesis_cleaner(test_str):
     return ret
 
 
-def split_emails(text, stopwords, lemmatize, english_words):
+def split_emails(text, stopwords_bool, lemmatize_bool, english_words_bool):
 
     # convert text to string
     text = str(text)
@@ -216,12 +221,12 @@ def split_emails(text, stopwords, lemmatize, english_words):
     # Remove all numbers from emails, they are not relevant
     text = text.translate(str.maketrans("", "", digits))
 
-    if stopwords:
+    if stopwords_bool:
         # remove stopwords
         text_tokens = word_tokenize(text)
         text = " ".join([word for word in text_tokens if not word in stopwords.words()])
 
-    if lemmatize:
+    if lemmatize_bool:
         # define lemmatizer
         lemmatizer = WordNetLemmatizer()
 
@@ -229,7 +234,7 @@ def split_emails(text, stopwords, lemmatize, english_words):
         lemma_words = [lemmatizer.lemmatize(o) for o in text.split()]
         text = " ".join(lemma_words)
 
-    if english_words:
+    if english_words_bool:
         # remove non english words from string (advanced, takes a lot of time)
         words = set(nltk.corpus.words.words())
         text = " ".join(
