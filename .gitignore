@@ -141,3 +141,5 @@ venv/
 Icon
 src/Icon
 data/Icon
+
+models/*
