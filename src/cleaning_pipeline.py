@@ -34,8 +34,10 @@ def data_cleaning(
 
     print("Cleaning starting...")
 
-    # Drop columns with no email content
-    df = df.dropna(subset=["LastIncomingEmail__c"])
+    # Drop rows with no email content
+    # df = df.dropna(subset=["LastIncomingEmail__c"])
+    # fill na of with No Content
+    df["LastIncomingEmail__c"] = df["LastIncomingEmail__c"].fillna("No-Content")
 
     # Drop this column as it contains always the same string "Case" or "Contact"
     df = df.drop(["attributes.type", "Contact.attributes.type"], axis=1)

@@ -4,7 +4,7 @@ import joblib
 
 class TfidfClassifer:
     def __init__(self, data, local_path, feature, train=False):
-        self.data = data
+        self.data = data.copy(deep=True)
         self.local_path = local_path
         self.feature = feature
 
@@ -67,7 +67,7 @@ class TfidfClassifer:
         self.y_test = self.df_test["Type"].values
 
         # pipeline
-        classifier = RandomForestClassifier(verbose=1)
+        classifier = RandomForestClassifier(verbose=0)
         model_rf = pipeline.Pipeline(
             [("vectorizer", self.vectorizer), ("classifier", classifier)]
         )

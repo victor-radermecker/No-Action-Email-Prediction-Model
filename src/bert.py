@@ -5,7 +5,7 @@ class BertClassifier:
     def __init__(self, data, local_path, cuda):
 
         # get the data
-        self.data = data
+        self.data = data.copy(deep=True)
 
         # Load a trained model and vocabulary that you have fine-tuned
         output_dir = local_path + "/../" + "models/bert/epoch_2"
@@ -83,14 +83,13 @@ class BertClassifier:
 
     def start_test(self):
 
-        print(
-            "Predicting labels for {:,} test sentences...".format(len(self.input_ids))
-        )
+        print("\n Running NLP (BERT) classification... \n")
+
         # Put model in evaluation mode
         self.bert.eval()
 
         # Tracking variables
-        self.predictions, true_labels, probabilities = [], [], []
+        predictions, true_labels, probabilities = [], [], []
 
         # Predict
         for batch in tqdm(self.prediction_dataloader):
@@ -116,8 +115,10 @@ class BertClassifier:
             label_ids = b_labels.to("cpu").numpy()
 
             # Store predictions and true labels
-            self.predictions.append(logits)
+            predictions.append(logits)
             probabilities.append(probs)
             true_labels.append(label_ids)
 
-        print("NLP - Bert: Predictions done.")
+        self.predictions = np.concatenate(probabilities, axis=0)[:, 1]
+
+        print("\nNLP (BERT) classification done. \n")

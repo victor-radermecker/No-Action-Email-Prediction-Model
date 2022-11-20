@@ -7,6 +7,9 @@ from bert import BertClassifier
 from tfidf import TfidfClassifer
 from stacking import Stacking
 from sentiment import Sentiment
+import warnings
+
+warnings.filterwarnings("ignore")
 
 
 class EmailClassifier:
@@ -49,8 +52,8 @@ class EmailClassifier:
         self.data = data_cleaning(
             self.data,
             self.cleaned_data_path,
-            stopwords_bool=False,
-            lemmatize_bool=False,
+            stopwords_bool=True,
+            lemmatize_bool=True,
             english_words_bool=False,
         )
 
@@ -63,15 +66,14 @@ class EmailClassifier:
         self.cleaned_data_path = (
             self.out_path + self.timestamp + "_CMACGM_DataFrame_Clean" + ".csv"
         )
-        self.results_path = (
-            self.out_path + "self.timestamp" + "_CMACGM_Results" + ".csv"
-        )
+        self.results_path = self.out_path + self.timestamp + "_CMACGM_Results" + ".csv"
 
     def initalize_model(self):
 
         NLPClassifier = BertClassifier(self.data, self.local_path, cuda=False)
         NLPClassifier.predict()
 
+        print("\n Running TFIDF classification... \n")
         EmailObjectClassifier = TfidfClassifer(
             self.data, self.local_path, "EmailObject", train=False
         )
@@ -92,20 +94,33 @@ class EmailClassifier:
         )
         ContactEmailClassifier.predict()
 
+        print("\nTFIDF classification done. \n")
+
+        NLP_Sentiment = Sentiment(self.data, self.local_path)
+        NLP_Sentiment.predict()
+
         # Get predictions
         bert_classifier_preds = NLPClassifier.predictions
         email_object_preds = EmailObjectClassifier.predictions
         email_content_preds = LastEmailContentClassifier.predictions
         team_name_preds = TeamNameClassifier.predictions
         contact_email_preds = ContactEmailClassifier.predictions
+        sentiment_preds_labels = NLP_Sentiment.predictions_labels
+        sentiment_preds_score = NLP_Sentiment.predictions_score
 
-        # print(EmailObjectClassifier.predictions)
-        self.ext_preds = [
-            bert_classifier_preds,
-            email_object_preds,
-            email_content_preds,
-            team_name_preds,
-            contact_email_preds,
-        ]
+        d = {
+            "bert_classifier_preds": bert_classifier_preds,
+            "email_object_preds": email_object_preds,
+            "email_content_preds": email_content_preds,
+            "team_name_preds": team_name_preds,
+            "contact_email_preds": contact_email_preds,
+            "sentiment_preds_labels": sentiment_preds_labels,
+            "sentiment_preds_score": sentiment_preds_score,
+        }
 
+        self.ext_preds = pd.DataFrame(d)
         Stacker = Stacking(self.data, self.local_path, self.ext_preds)
+        self.data["PredictedType"] = Stacker.predict()
+        self.data.to_csv(self.results_path, index=False)
+
+        print("\n\n Model finished running. \n Results saved in: ", self.results_path)
