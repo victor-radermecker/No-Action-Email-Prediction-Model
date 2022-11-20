@@ -28,12 +28,6 @@ class EmailClassifier:
         # Model
         self.initalize_model()
 
-    def init(self):
-        pass
-
-    def info(self):
-        pass
-
     def read_data(self):
         """
         Read data from a csv file.
