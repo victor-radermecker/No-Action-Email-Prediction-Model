@@ -1,8 +1,8 @@
 from packages import *
 import joblib
 
-class TfidfClassifer:
 
+class TfidfClassifer:
     def __init__(self, data, local_path, feature, train=False):
         self.data = data
         self.local_path = local_path
@@ -12,26 +12,55 @@ class TfidfClassifer:
         self.preprocess_data()
         self.select_features()
 
-
     def preprocess_data(self):
         # Remove stopwords
         lst_stopwords = nltk.corpus.stopwords.words("english")
-        self.data[self.feature] = self.data[self.feature].progress_apply(lambda x: self.utils_preprocess_text(x, flg_stemm=False, flg_lemm=True, lst_stopwords=lst_stopwords))
-
+        self.data[self.feature] = self.data[self.feature].progress_apply(
+            lambda x: self.utils_preprocess_text(
+                x, flg_stemm=False, flg_lemm=True, lst_stopwords=lst_stopwords
+            )
+        )
 
     def select_features(self):
 
         if self.feature == "EmailObject":
             self.corpus = self.data["EmailObject"]
+        elif self.feature == "LastEmailContent":
+            self.corpus = self.data["LastEmailContent"]
+        elif self.feature == "TeamName":
+            self.data["TeamName"] = self.data["TeamName"].str.replace("-", " ")
+            self.corpus = self.data["TeamName"]
+        elif self.feature == "ContactEmail":
+            self.data["ContactEmail"] = self.data["ContactEmail"].str.replace("@", " ")
+            self.data["ContactEmail"] = self.data["ContactEmail"].str.replace(".", " ")
+            self.data["ContactEmail"] = self.data["ContactEmail"].str.replace("_", " ")
+            self.data["ContactEmail"] = self.data["ContactEmail"].str.replace("-", " ")
+            self.data["LastEmailCCAddress"] = self.data[
+                "LastEmailCCAddress"
+            ].str.replace("@", " ")
+            self.data["LastEmailCCAddress"] = self.data[
+                "LastEmailCCAddress"
+            ].str.replace(".", " ")
+            self.data["LastEmailCCAddress"] = self.data[
+                "LastEmailCCAddress"
+            ].str.replace("_", " ")
+            self.data["LastEmailCCAddress"] = self.data[
+                "LastEmailCCAddress"
+            ].str.replace("-", " ")
+            self.data["Emails"] = (
+                self.data["ContactEmail"] + self.data["LastEmailCCAddress"]
+            )
+            self.corpus = self.data["Emails"]
         else:
-            pass
-
+            print("Error: Feature not found")
 
     def train(self):
-        
+
         # vectorize Data
-        self.df_train, self.df_test = train_test_split(self.data, test_size = 0.1, random_state = 1, stratify = self.data["Type"])
-        self.vectorizer, self.X_train = self.initVectorizer(self.df_train, self.feature) 
+        self.df_train, self.df_test = train_test_split(
+            self.data, test_size=0.1, random_state=1, stratify=self.data["Type"]
+        )
+        self.vectorizer, self.X_train = self.initVectorizer(self.df_train, self.feature)
 
         ## get target
         self.y_train = self.df_train["Type"].values
@@ -39,22 +68,38 @@ class TfidfClassifer:
 
         # pipeline
         classifier = RandomForestClassifier(verbose=1)
-        model_rf = pipeline.Pipeline([("vectorizer", self.vectorizer),  
-                                    ("classifier", classifier)])
+        model_rf = pipeline.Pipeline(
+            [("vectorizer", self.vectorizer), ("classifier", classifier)]
+        )
 
         ## train classifier
         model_rf["classifier"].fit(self.X_train, self.y_train)
 
         # save model
-        model_dir = self.local_path + "/../" + "models/tfidf/" + time.strftime("%Y%m%d-%H%M%S_") + self.feature + "Classifier.joblib" 
-        pickle.dump(model_rf, open(model_dir, 'wb'))
+        model_dir = (
+            self.local_path
+            + "/../"
+            + "models/tfidf/"
+            + time.strftime("%Y%m%d-%H%M%S_")
+            + self.feature
+            + "Classifier.joblib"
+        )
+        pickle.dump(model_rf, open(model_dir, "wb"))
 
     def predict(self):
-        model_dir = self.local_path + "/../" + "models/tfidf/" + self.feature + "Classifier.joblib" 
-        model = pickle.load(open(model_dir, 'rb'))
-        self.predictions = model.predict(self.data[self.feature].values)            
+        model_dir = (
+            self.local_path
+            + "/../"
+            + "models/tfidf/"
+            + self.feature
+            + "Classifier.joblib"
+        )
+        model = pickle.load(open(model_dir, "rb"))
+        self.predictions = model.predict(self.data[self.feature].values)
 
-    def utils_preprocess_text(self, text, flg_stemm=False, flg_lemm=True, lst_stopwords=None):
+    def utils_preprocess_text(
+        self, text, flg_stemm=False, flg_lemm=True, lst_stopwords=None
+    ):
         """
         Preprocess a string.
         :parameter
@@ -88,7 +133,6 @@ class TfidfClassifer:
         text = " ".join(lst_text)
         return text
 
-
     def initVectorizer(self):
         """
         Initialize the vectorizer.
@@ -113,7 +157,9 @@ class TfidfClassifer:
                 pd.DataFrame({"feature": X_names, "score": 1 - p, "y": cat})
             )
 
-            dtf_features = dtf_features.sort_values(["y", "score"], ascending=[True, False])
+            dtf_features = dtf_features.sort_values(
+                ["y", "score"], ascending=[True, False]
+            )
 
             dtf_features = dtf_features[dtf_features["score"] > p_value_limit]
 
@@ -131,5 +177,3 @@ class TfidfClassifer:
         self.vectorizer = feature_extraction.text.TfidfVectorizer(vocabulary=X_names)
         self.vectorizer.fit(self.corpus)
         self.X_train = self.vectorizer.transform(self.corpus)
-
-   

@@ -5,6 +5,9 @@ import time
 from packages import *
 from bert import BertClassifier
 from tfidf import TfidfClassifer
+from stacking import Stacking
+from sentiment import Sentiment
+
 
 class EmailClassifier:
     def __init__(self, in_path, out_path):
@@ -65,9 +68,44 @@ class EmailClassifier:
         )
 
     def initalize_model(self):
-        # BertClassifier(self.data, self.local_path, cuda=False)
-        EmailObjectClassifier = TfidfClassifer(self.data, self.local_path, "EmailObject", train=False)
+
+        NLPClassifier = BertClassifier(self.data, self.local_path, cuda=False)
+        NLPClassifier.predict()
+
+        EmailObjectClassifier = TfidfClassifer(
+            self.data, self.local_path, "EmailObject", train=False
+        )
         EmailObjectClassifier.predict()
-        print(EmailObjectClassifier.predictions)
 
+        LastEmailContentClassifier = TfidfClassifer(
+            self.data, self.local_path, "LastEmailContent", train=False
+        )
+        LastEmailContentClassifier.predict()
 
+        TeamNameClassifier = TfidfClassifer(
+            self.data, self.local_path, "TeamName", train=False
+        )
+        TeamNameClassifier.predict()
+
+        ContactEmailClassifier = TfidfClassifer(
+            self.data, self.local_path, "ContactEmail", train=False
+        )
+        ContactEmailClassifier.predict()
+
+        # Get predictions
+        bert_classifier_preds = NLPClassifier.predictions
+        email_object_preds = EmailObjectClassifier.predictions
+        email_content_preds = LastEmailContentClassifier.predictions
+        team_name_preds = TeamNameClassifier.predictions
+        contact_email_preds = ContactEmailClassifier.predictions
+
+        # print(EmailObjectClassifier.predictions)
+        self.ext_preds = [
+            bert_classifier_preds,
+            email_object_preds,
+            email_content_preds,
+            team_name_preds,
+            contact_email_preds,
+        ]
+
+        Stacker = Stacking(self.data, self.local_path, self.ext_preds)

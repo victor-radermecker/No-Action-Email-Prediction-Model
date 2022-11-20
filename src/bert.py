@@ -18,9 +18,13 @@ class BertClassifier:
         self.device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
         self.bert.to(self.device)
 
+    def predict(self):
         # Start testing
         self.data_preprocessing()
         self.start_test()
+
+    def training(self):
+        pass  # TODO
 
     def data_preprocessing(self):
 
@@ -29,11 +33,11 @@ class BertClassifier:
 
         # Create sentence and label lists
         emails = self.data["LastEmailContent"].values
-        labels = self.data["Type"].values
+        self.labels = self.data["Type"].values
 
         # Tokenize all of the sentences and map the tokens to thier word IDs.
-        input_ids = []
-        attention_masks = []
+        self.input_ids = []
+        self.attention_masks = []
 
         # For every sentence...
         for email in tqdm(emails):
@@ -55,21 +59,23 @@ class BertClassifier:
             )
 
             # Add the encoded sentence to the list.
-            input_ids.append(encoded_dict["input_ids"])
+            self.input_ids.append(encoded_dict["input_ids"])
 
             # And its attention mask (simply differentiates padding from non-padding).
-            attention_masks.append(encoded_dict["attention_mask"])
+            self.attention_masks.append(encoded_dict["attention_mask"])
 
         # Convert the lists into tensors.
-        self.input_ids = torch.cat(input_ids, dim=0)
-        attention_masks = torch.cat(attention_masks, dim=0)
-        labels = torch.tensor(labels)
+        self.input_ids = torch.cat(self.input_ids, dim=0)
+        self.attention_masks = torch.cat(self.attention_masks, dim=0)
+        self.labels = torch.tensor(self.labels)
 
         # Set the batch size.
         batch_size = 32
 
         # Create the DataLoader.
-        prediction_data = TensorDataset(input_ids, attention_masks, labels)
+        prediction_data = TensorDataset(
+            self.input_ids, self.attention_masks, self.labels
+        )
         prediction_sampler = SequentialSampler(prediction_data)
         self.prediction_dataloader = DataLoader(
             prediction_data, sampler=prediction_sampler, batch_size=batch_size
@@ -84,7 +90,7 @@ class BertClassifier:
         self.bert.eval()
 
         # Tracking variables
-        predictions, true_labels, probabilities = [], [], []
+        self.predictions, true_labels, probabilities = [], [], []
 
         # Predict
         for batch in tqdm(self.prediction_dataloader):
@@ -110,7 +116,7 @@ class BertClassifier:
             label_ids = b_labels.to("cpu").numpy()
 
             # Store predictions and true labels
-            predictions.append(logits)
+            self.predictions.append(logits)
             probabilities.append(probs)
             true_labels.append(label_ids)
 
